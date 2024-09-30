@@ -4,6 +4,8 @@ from selenium.webdriver.chrome.options import Options
 import google.generativeai as genai
 import time
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
 GOOGLE_API_KEY = 'AIzaSyCW9fwk8jBkVQ45fiKvVHFLj1971yI1X-o'
@@ -38,26 +40,27 @@ class Restaurant:
     def crawl_reviews(self):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
-        options.add_argument(
         chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--user-agent=Mozilla/5.0 (X11; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0')
         driver = webdriver.Chrome(options=chrome_options)
-        url = f"https://map.naver.com/v5/search/{self.location} {self.name}"
+        url = f"https://map.naver.com/v5/{self.location} {self.name}"
         driver.get(url)
-        driver.switch_to.parent_frame()
-        iframe = driver.find_element(By.XPATH,'//*[@id="entryIframe"]')
-        driver.switch_to.frame(iframe)
-        time.sleep(3)
-        review = driver.find_element_by_css_selector('#app-root > div > div > div > div.place_section.GCwOh > div._3uUKd._2z4r0 > div._20Ivz') 
-        # xpath는 가게마다 다르게 설정되어 있었기 때문에 css selector를 이용해서 review text가 있는 tag에 접근
-        review_text = review.find_elements_by_tag_name('span')
+        time.sleep(5)
+        driver.switch_to.frame("entryIframe")
+        time.sleep(5)
+        page_source = driver.page_source
+        print(page_source)
+        driver.quit()
+        # review = driver.find_element_by_css_selector('#app-root > div > div > div > div.place_section.GCwOh > div._3uUKd._2z4r0 > div._20Ivz') 
+        # # xpath는 가게마다 다르게 설정되어 있었기 때문에 css selector를 이용해서 review text가 있는 tag에 접근
+        # review_text = review.find_elements_by_tag_name('span')
 
         
-        print(review_text)
+        # print(review_text)
         
         
 
         
-restuarant = Restaurant("버우드", "홍대", ["스파게티"])
+restuarant = Restaurant("가장맛있는 족발", "등촌", ["스파게티"])
 print(restuarant.crawl_reviews())
  
-

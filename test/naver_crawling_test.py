@@ -46,33 +46,17 @@ encoded_place_name = urllib.parse.quote(place_name)
 print(encoded_place_name)
 new_url = f'https://m.place.naver.com/restaurant/{store_id}/home'
 
+
+
+
 headers = {
     'referer': f'https://m.map.naver.com/search2/search.naver?query={encoded_place_name}&sm=hty&style=v5',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
     'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'Accept-Language' : 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
     'Accept-Encoding' : 'gzip, deflate, br',
-    'Connection' : 'keep-alive',
-    'Upgrade-Insecure-Requests' : '1',
-    'Sec-Fetch-Dest' : 'document',
-    'Sec-Fetch-Mode' : 'navigate',
-    'Sec-Fetch-Site' : 'cross-site',
-    'Sec-Fetch-User' : '?1', 
 }
 
 response = requests.get(new_url,headers=headers)
 
-if response.encoding.lower() != 'utf-8':
-    response.encoding = 'utf-8'  # 또는 'euc-kr' 등 적절한 인코딩으로 설정
-
-
-soup = BeautifulSoup(response.text, 'html.parser')
-target_div = soup.find('div', class_='nZapA')
-
-# <span> 태그 제거 (내용을 유지하지 않고 제거)
-for span in target_div.find_all('span'):
-    span.decompose()
-
-# 텍스트 추출
-cleaned_text = target_div.get_text(strip=True)
-print(cleaned_text+'m')
+print(response.text)

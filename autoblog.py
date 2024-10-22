@@ -52,13 +52,10 @@ class Restaurant_Info:
         driver = webdriver.Chrome(options=chrome_options)
         
         # getting naver store_id
-
-        
-        
         store_id=self.extract_store_id()
         
         
-        
+        # 크롤링 시작
         url = f"https://m.place.naver.com/restaurant/{store_id}/home"
         time.sleep(2)
         
@@ -74,7 +71,7 @@ class Restaurant_Info:
         
         # 리뷰 추출
         reviews = self.extract_reviews(driver)
-        print(f"리뷰:\n{reviews}")
+        print(f"리뷰:\n{reviews[0]}")
         
         driver.quit()
         display.stop()
@@ -138,10 +135,27 @@ class Restaurant_Info:
             schedule_txt += text + '\n'
         return schedule_txt
 
+
     def extract_reviews(self, driver):
         # 리뷰 추출 로직을 여기에 추가
-        # 예시로 빈 문자열 반환
-        return "리뷰 정보를 찾을 수 없습니다."
+    
+        driver.find_element(By.XPATH, '//a[@class="tpj9w _tab-menu"]/span[text()="리뷰"]').click()
+        time.sleep(2) 
+        
+        n=3
+        for i in range(n):
+
+            driver.find_element(By.CSS_SELECTOR, 'a.fvwqf').click()
+            time.sleep(2) 
+        
+        page_source = driver.page_source
+        soup = BeautifulSoup(page_source, 'html.parser')
+        
+        elements = soup.find_all(class_ = 'pui__xtsQN-')
+        
+        text_list = [element.get_text().strip() for element in elements]
+            
+        return text_list
 
 
 

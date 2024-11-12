@@ -52,3 +52,20 @@ pyvirtualdisplay을 이용해서 가상화면을 띄우고 실행해야 특정 U
   - 수집한 데이터 db에 적재 해야할지 그냥 사용할지
   - 오류에 대한 처리 필요(try~)
 * graphsql vs rest api 비교 해봐야할 듯
+
+
+
+2024-11-12
+코드는 완성했으나 
+"""
+for i in range(n):
+            more_reviews_btn = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.fvwqf'))
+            )
+"""
+이부분에서 자꾸 에러가 남 왜 그렇지
+-> 스크롤링 다운으로 해결완료
+
+예외 처리 완료
+
+  

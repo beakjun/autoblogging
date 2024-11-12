@@ -9,6 +9,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
+import logging
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+
+# 로그 설정
+logging.basicConfig(
+    filename="./logs/restaurant_info.log",         # 로그 파일 이름
+    level=logging.INFO,                      # 로그 레벨 (INFO 이상의 레벨만 기록)
+    format="%(asctime)s - %(levelname)s - %(message)s"  # 로그 출력 형식
+)
 
 GOOGLE_API_KEY = 'AIzaSyCW9fwk8jBkVQ45fiKvVHFLj1971yI1X-o'
 
@@ -40,42 +49,58 @@ class Restaurant_Info:
         return f"음식점 이름: {self.name} , 장소: {self.location}, 대표 메뉴: {menu_str}"
     
     def crawling_restaurant(self):
-        # pyvirtualdisplay
-        display = Display(visible=0, size=(1920, 1080))
-        display.start()
-        agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
-        # selenium options
-        chrome_options = Options()
-        chrome_options.add_argument(f'--user-agent={agent}')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        # selenium driver
-        driver = webdriver.Chrome(options=chrome_options)
         
-        # getting naver store_id
-        store_id=self.extract_store_id()
+        logging.info(f"{self.name} 크롤링 시작")
         
         
-        # 크롤링 시작
-        url = f"https://m.place.naver.com/restaurant/{store_id}/home"
-        time.sleep(2)
+        try : 
+            display = Display(visible=0, size=(1920, 1080))
+            display.start()
+            agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
+            # selenium options
+            chrome_options = Options()
+            chrome_options.add_argument(f'--user-agent={agent}')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            # selenium driver
+            driver = webdriver.Chrome(options=chrome_options)
+            
+            # getting naver store_id
+            store_id=self.extract_store_id()
+            
+            
+            # 크롤링 시작
+            url = f"https://m.place.naver.com/restaurant/{store_id}/home"
+            time.sleep(2)
+            
+            driver.get(url)
+            
+            # 가게 위치 추출
+            loc_text = self.extract_location(driver)
+            input_loc_txt = f"가게 위치: {loc_text}"
+            logging.info("가게 위치 크롤링 완료")
+            
+            # 영업시간 추출
+            schedule_txt = self.extract_schedule(driver)
+            input_sch_txt = f"영업시간:\n{schedule_txt}"
+            logging.info("영업시간 크롤링 완료")
+            
+            # 리뷰 추출
+            time.sleep(3)
+            n= 10 # 몇 번이나 더보기 버튼을 누를 것인가
+            reviews = self.extract_reviews(driver,n)
+            input_reviews_txt = f"리뷰 :{", \n".join(reviews)}"
+            logging.info("리뷰 크롤링 완료")
         
-        driver.get(url)
+        except Exception as e :
+            logging.error(f"{self.name} 크롤링 중 오류 발생 :{e}")
         
-        # 가게 위치 추출
-        loc_text = self.extract_location(driver)
-        print(f"가게 위치: {loc_text}")
-        
-        # 영업시간 추출
-        schedule_txt = self.extract_schedule(driver)
-        print(f"영업시간:\n{schedule_txt}")
-        
-        # 리뷰 추출
-        reviews = self.extract_reviews(driver)
-        print(f"리뷰:\n{reviews[0]}")
-        
-        driver.quit()
-        display.stop()
-        
+        finally : 
+            driver.quit()
+            display.stop()
+            logging.info(f"{self.name} 크롤링 종료")
+            
+            return input_loc_txt, input_sch_txt, input_reviews_txt
+         
         
     def extract_store_id(self):
         url = f'https://m.map.naver.com/search2/search.naver?query={self.location} {self.name}&sm=hty&style=v5'
@@ -136,23 +161,39 @@ class Restaurant_Info:
         return schedule_txt
 
 
-    def extract_reviews(self, driver):
+    def extract_reviews(self, driver,n):
         # 리뷰 추출 로직을 여기에 추가
     
-        driver.find_element(By.XPATH, '//a[@class="tpj9w _tab-menu"]/span[text()="리뷰"]').click()
-        time.sleep(2) 
+        review_tab = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//a[@class="tpj9w _tab-menu"]/span[text()="리뷰"]'))
+        )
+        review_tab.click()
+        logging.info("Review Tab 화면 정상 호출")
         
-        n=3
         for i in range(n):
-
-            driver.find_element(By.CSS_SELECTOR, 'a.fvwqf').click()
-            time.sleep(2) 
-        
+            try : 
+                
+                more_reviews_btn = WebDriverWait(driver, 20).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.fvwqf'))
+                )
+                if more_reviews_btn.is_displayed():
+                
+                    driver.execute_script("arguments[0].scrollIntoView(true);", more_reviews_btn)
+                    time.sleep(5)
+                    more_reviews_btn.click()
+                    time.sleep(3) 
+                    
+                    logging.info(f"{i} 번째 더보기 클릭 완료")
+                else:
+                    logging.info('더보기 버튼이 더이상 존재하지 않습니다.')
+                    break
+            except  (TimeoutException, NoSuchElementException):
+                logging.info(f'더보기 버튼을 찾을 수 없거나 로딩이 완료되었습니다.')
+                break
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, 'html.parser')
         
         elements = soup.find_all(class_ = 'pui__xtsQN-')
-        
         text_list = [element.get_text().strip() for element in elements]
             
         return text_list
@@ -160,14 +201,7 @@ class Restaurant_Info:
 
 
 
-
-
-
-
-
-
-
-
 restaurant=Restaurant_Info("텐노아지","등촌역","2024-08-02")
 restaurant.add_menu('파스타')
-restaurant.crawling_restaurant()
+loc , schedule, reviews =restaurant.crawling_restaurant()
+print(reviews)

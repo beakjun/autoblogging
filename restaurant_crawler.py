@@ -9,19 +9,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
-import logging
+from logger_config import get_logger
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-# 로그 설정
-logging.basicConfig(
-    filename="/home/wjsqorwns93/bj/autoblogging/logs/restaurant_info.log",         # 로그 파일 이름
-    level=logging.INFO,                      # 로그 레벨 (INFO 이상의 레벨만 기록)
-    format="%(asctime)s - %(levelname)s - %(message)s"  # 로그 출력 형식
-)
 
 GOOGLE_API_KEY = 'AIzaSyCW9fwk8jBkVQ45fiKvVHFLj1971yI1X-o'
 
-class Restaurant_Info:
+class RestaurantInfo:
     """
     음식점 클래스 초기화 메서드
 
@@ -35,6 +29,7 @@ class Restaurant_Info:
         self.location = location
         self.restaurant_reviews = []
         self.menu_reviews = {}
+        self.logger = get_logger(self.__class__.__name__)
 
 
 
@@ -43,7 +38,7 @@ class Restaurant_Info:
     
     def crawling_restaurant(self):
         
-        logging.info(f"{self.name} 크롤링 시작")
+        self.logger.info(f"{self.name} 크롤링 시작")
         
         
         try : 
@@ -70,27 +65,27 @@ class Restaurant_Info:
             # 가게 위치 추출
             loc_text = self.extract_location(driver)
             input_loc_txt = f"가게 위치: {loc_text}"
-            logging.info("가게 위치 크롤링 완료")
+            self.logger.info("가게 위치 크롤링 완료")
             
             # 영업시간 추출
             schedule_txt = self.extract_schedule(driver)
             input_sch_txt = f"영업시간:\n{schedule_txt}"
-            logging.info("영업시간 크롤링 완료")
+            self.logger.info("영업시간 크롤링 완료")
             
             # 리뷰 추출
             time.sleep(3)
             n= 10 # 몇 번이나 더보기 버튼을 누를 것인가
             reviews = self.extract_reviews(driver,n)
             input_reviews_txt = f"리뷰 :{", \n".join(reviews)}"
-            logging.info("리뷰 크롤링 완료")
+            self.logger.info("리뷰 크롤링 완료")
         
         except Exception as e :
-            logging.error(f"{self.name} 크롤링 중 오류 발생 :{e}")
+            self.logger.error(f"{self.name} 크롤링 중 오류 발생 :{e}")
         
         finally : 
             driver.quit()
             display.stop()
-            logging.info(f"{self.name} 크롤링 종료")
+            self.logger.info(f"{self.name} 크롤링 종료")
             
             restaurant_info = {
                 'name' : self.name,
@@ -167,7 +162,7 @@ class Restaurant_Info:
             EC.element_to_be_clickable((By.XPATH, '//a[@class="tpj9w _tab-menu"]/span[text()="리뷰"]'))
         )
         review_tab.click()
-        logging.info("Review Tab 화면 정상 호출")
+        self.logger.info("Review Tab 화면 정상 호출")
         
         for i in range(n):
             try : 
@@ -182,12 +177,12 @@ class Restaurant_Info:
                     more_reviews_btn.click()
                     time.sleep(3) 
                     
-                    logging.info(f"{i} 번째 더보기 클릭 완료")
+                    self.logger.info(f"{i} 번째 더보기 클릭 완료")
                 else:
-                    logging.info('더보기 버튼이 더이상 존재하지 않습니다.')
+                    self.logger.info('더보기 버튼이 더이상 존재하지 않습니다.')
                     break
             except  (TimeoutException, NoSuchElementException):
-                logging.info(f'더보기 버튼을 찾을 수 없거나 로딩이 완료되었습니다.')
+                self.logger.info(f'더보기 버튼을 찾을 수 없거나 로딩이 완료되었습니다.')
                 break
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, 'html.parser')
@@ -198,12 +193,14 @@ class Restaurant_Info:
         return text_list
     
 
+def main():
+    restaurant=RestaurantInfo("텐노아지","등촌역")
+    restaurant_info =restaurant.crawling_restaurant()
+    print(restaurant_info)
 
-#실행 코드
-# restaurant=Restaurant_Info("텐노아지","등촌역")
-# restaurant_info =restaurant.crawling_restaurant()
-
-# print(restaurant_info)
+if __name__ == "__main__":
+    main()
+    
 
 
 

@@ -2,9 +2,11 @@ import textwrap
 import google.generativeai as genai
 from IPython.display import display
 from IPython.display import Markdown
-
-class restaurant_post_generator: # gemini_api 활용
+from logger_config import get_logger
+ 
+class PostGenerator: # gemini_api 활용
     def __init__(self,restaurant_info:dict, menu:list, visit_date: str,api_key:str):
+        self.logger = get_logger(self.__class__.__name__)
         self.restaurant_info = restaurant_info
         self.restaurant_info.update({
             "menu": menu,
@@ -12,15 +14,19 @@ class restaurant_post_generator: # gemini_api 활용
         })
         self.api_key = api_key
         self.model = self.genai_model()
+        
+        
+    
 
    # 메뉴 추가 메서드
     def add_menu_item(self, item):
         self.menu.append(item)  # 새로운 메뉴 항목 추가
-
+        self.logger.info(f"{item} 메뉴가 추가 되었습니다.")
     # 메뉴 제거 메서드
     def remove_menu_item(self):
         if item in self.menu:
-            self.menu.pop()      
+            removed_menu=self.menu.pop()
+            self.logger.info(f"{removed_menu} 메뉴가 제거 되었습니다.")      
     
         
     def genai_model(self):
@@ -35,7 +41,7 @@ class restaurant_post_generator: # gemini_api 활용
 
         model = genai.GenerativeModel('gemini-1.5-flash',
                                     generation_config=generation_config)
-        
+        self.logger.info("모델 api 로드 완료") 
         return model
     
     def generate_title(self):
@@ -48,7 +54,8 @@ class restaurant_post_generator: # gemini_api 활용
                                     - 그리고 세번째는 ''안에 음식점 이름을 넣어줘
                                     - 마지막으로는 / 서이추환영을 꼭 넣어주길 바라
                                     - 다른 옵션이나 부가 설명은 답변안에 넣지말고 제목만 추출해서 쓸 수 있게 짧게 답변 줬으면 좋겠어
-                                    """)                   
+                                    """)    
+        self.logger.info("블로그 제목 완성")               
         return response.text
     
     def generate_post(self):
@@ -117,6 +124,7 @@ class restaurant_post_generator: # gemini_api 활용
                                 - 리뷰에서 봤다 이런 표현은 자제해줘
                                 - 글의 마지막에는 이번 포스팅은 여기서 마치겠습니다!!! 먹바! 가 들어가야돼
                                 """)
+        self.logger.info("블로그 포스트 글 완성")  
         return response.text
     
     
@@ -130,15 +138,27 @@ class restaurant_post_generator: # gemini_api 활용
                                     - 정기 휴무가 있다면 제일 마지막에 적어줘 없으면 적지마
                                     - 마지막으로 네이버에 등록된 업체 등록 영업 시간입니다* 를 이대로 똑같이 맨 아래에 꼭 넣어줘, 영업 시간입니다 뒤에 * 잊지말고 넣어주고
                                     """)
+        self.logger.info("영업시간 작성 완료")  
         return response.text
-    
-import json
-file_path = '/home/wjsqorwns93/bj/autoblogging/restaurant_data.json'
-with open(file_path, 'r', encoding='utf-8') as file:
-    data = json.load(file)
-    
-GOOGLE_API_KEY = 'AIzaSyCW9fwk8jBkVQ45fiKvVHFLj1971yI1X-o'
-postgenerator = restaurant_post_generator(data,['아지텐동','에비텐카레'],'2024-08-02',GOOGLE_API_KEY)
 
-aa=postgenerator.generate_schedule()
-print(aa)
+
+
+def main():
+    
+    # 테스트용 데이터
+    import json    
+    file_path = '/home/wjsqorwns93/bj/autoblogging/restaurant_data.json'
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    
+    GOOGLE_API_KEY = 'AIzaSyBiKq7ZZp_Rndr7IA6K0_2ZeGrwJeWUqxI'
+    postgenerator = PostGenerator(data,['아지텐동','에비텐카레'],'2024-08-02',GOOGLE_API_KEY)
+
+    aa=postgenerator.generate_schedule()
+    
+    #bb=postgenerator.generate_post()
+    #cc=postgenerator.generate_title()
+    print(aa)
+
+if __name__ == "__main__":
+    main()

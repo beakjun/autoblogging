@@ -131,8 +131,10 @@ class PostGenerator: # gemini_api 활용
     def generate_schedule(self):
         response = self.model.generate_content(f"""{self.restaurant_info['schedule']}은 음식점의 영업시간 정보야 이를 블로그에 정보로 넣을 건데 다음과 같이 적어줘
                                     - 영업시간 이라는 단어로 시작해줘 이부분에만 '*'는 빼줘
+                                    - 괄호는 쓰이지 않아
                                     - 영업시간이 같은 요일끼리 묶어줘 예) 월요일 - 금요일, 토요일 - 일요일
-                                    - 요일 뒤, 라스트 오더, 브레이크 타임뒤에는 한줄 띄고 시간을 적어줘
+                                    - 같은 요일 분류의 브레이크타임, 라스트오더면 한줄띄지말고 다른 요일 분류일 때만 한줄띄고 작성해줘
+                                    - 요일 뒤, 라스트 오더, 브레이크 타임 뒤에는 꼭 한줄 띄고 시간을 적어줘
                                     - 영업시간을 두개로 쪼개지말고 브레이크 타임 고려하지 말고 꼭 한줄에 적어줘
                                     - 브레이크 타임이나 라스트 오더 시간이 있다면 적어줘
                                     - 정기 휴무가 있다면 제일 마지막에 적어줘 없으면 적지마
@@ -156,7 +158,7 @@ def main():
 
     #aa=postgenerator.generate_schedule()
     
-    bb=postgenerator.generate_post()
+    bb=postgenerator.generate_schedule()
     
     #bb=postgenerator.generate_post()
     #cc=postgenerator.generate_title()

@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 LOG_FILE = "/home/wjsqorwns93/bj/autoblogging/logs/restaurant_info.log"
 
 # 공통 핸들러
-handler = RotatingFileHandler(LOG_FILE, maxBytes=5 * 1024, backupCount=3)
+handler = RotatingFileHandler(LOG_FILE, maxBytes=5 * 1024 * 124, backupCount=3)
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 

@@ -154,11 +154,13 @@ def main():
     GOOGLE_API_KEY = 'AIzaSyBiKq7ZZp_Rndr7IA6K0_2ZeGrwJeWUqxI'
     postgenerator = PostGenerator(data,['아지텐동','에비텐카레'],'2024-08-02',GOOGLE_API_KEY)
 
-    aa=postgenerator.generate_schedule()
+    #aa=postgenerator.generate_schedule()
+    
+    bb=postgenerator.generate_post()
     
     #bb=postgenerator.generate_post()
     #cc=postgenerator.generate_title()
-    print(aa)
+    print(bb)
 
 if __name__ == "__main__":
     main()

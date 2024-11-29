@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from pyvirtualdisplay import Display
 from logger_config import get_logger
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-
+from selenium.webdriver.common.action_chains import ActionChains
 
 GOOGLE_API_KEY = 'AIzaSyCW9fwk8jBkVQ45fiKvVHFLj1971yI1X-o'
 
@@ -58,6 +58,7 @@ class RestaurantInfo:
             
             # 크롤링 시작
             url = f"https://m.place.naver.com/restaurant/{store_id}/home"
+            review_url = f"https://m.place.naver.com/restaurant/{store_id}/review/visitor"
             time.sleep(2)
             
             driver.get(url)
@@ -75,8 +76,11 @@ class RestaurantInfo:
             # 리뷰 추출
             time.sleep(3)
             n= 10 # 몇 번이나 더보기 버튼을 누를 것인가
+            driver.get(review_url)
             reviews = self.extract_reviews(driver,n)
+            
             input_reviews_txt = f"리뷰 :{", \n".join(reviews)}"
+        
             self.logger.info("리뷰 크롤링 완료")
         
         except Exception as e :
@@ -156,24 +160,39 @@ class RestaurantInfo:
 
 
     def extract_reviews(self, driver,n):
+        
+        
         # 리뷰 추출 로직을 여기에 추가
-    
-        review_tab = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, '//a[@class="tpj9w _tab-menu"]/span[text()="리뷰"]'))
-        )
-        review_tab.click()
+        # review_tab = WebDriverWait(driver, 20).until(
+        #     EC.element_to_be_clickable((By.XPATH, '//a[@class="tpj9w _tab-menu"]/span[text()="리뷰"]'))
+        # )
+        # review_tab.click()
+        
+        # # 페이지가 로드될 때까지 대기
+        print(driver.current_url)
         self.logger.info("Review Tab 화면 정상 호출")
         
         for i in range(n):
             try : 
                 
-                more_reviews_btn = WebDriverWait(driver, 20).until(
+                more_reviews_btn = WebDriverWait(driver, 10).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.fvwqf'))
                 )
+                try :
+                    actions = ActionChains(driver)
+                    actions.move_to_element(more_reviews_btn).perform()
+                    time.sleep(2)
+                    more_reviews_btn.click()
+                except  (TimeoutException, NoSuchElementException):
+                    self.logger.info(f'더보기 버튼을 찾을 수 없거나 로딩이 완료되었습니다.')
+                    break
                 if more_reviews_btn.is_displayed():
                 
                     driver.execute_script("arguments[0].scrollIntoView(true);", more_reviews_btn)
-                    time.sleep(5)
+                    button_location = more_reviews_btn.location
+                    scroll_y = button_location['y'] - 100
+                    driver.execute_script(f"window.scrollTo(0, {scroll_y});")
+                    time.sleep(3)
                     more_reviews_btn.click()
                     time.sleep(3) 
                     
@@ -194,7 +213,7 @@ class RestaurantInfo:
     
 
 def main():
-    restaurant=RestaurantInfo("텐노아지","등촌역")
+    restaurant=RestaurantInfo("버우드","연남")
     restaurant_info =restaurant.crawling_restaurant()
     print(restaurant_info)
 

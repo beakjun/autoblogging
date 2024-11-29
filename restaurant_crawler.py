@@ -175,13 +175,13 @@ class RestaurantInfo:
         for i in range(n):
             try : 
                 
-                more_reviews_btn = WebDriverWait(driver, 10).until(
+                more_reviews_btn = WebDriverWait(driver, 20).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.fvwqf'))
                 )
                 try :
                     actions = ActionChains(driver)
                     actions.move_to_element(more_reviews_btn).perform()
-                    time.sleep(2)
+                    time.sleep(5)
                     more_reviews_btn.click()
                 except  (TimeoutException, NoSuchElementException):
                     self.logger.info(f'더보기 버튼을 찾을 수 없거나 로딩이 완료되었습니다.')

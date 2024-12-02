@@ -39,7 +39,7 @@ class RestaurantInfo:
     def crawling_restaurant(self):
         
         self.logger.info(f"{self.name} 크롤링 시작")
-        
+        input_reviews_txt = ""
         
         try : 
             display = Display(visible=0, size=(1920, 1080))
@@ -84,6 +84,7 @@ class RestaurantInfo:
             self.logger.info("리뷰 크롤링 완료")
         
         except Exception as e :
+            put_reviews_txt = f"리뷰 :{", \n".join(reviews)}"
             self.logger.error(f"{self.name} 크롤링 중 오류 발생 :{e}")
         
         finally : 
@@ -127,7 +128,7 @@ class RestaurantInfo:
                 store_id = search_result['site']['list'][0]['id']
         else:
             store_id=None
-            print("requirejs가 포함된 <script> 태그를 찾을 수 없습니다.")
+            self.logger.info("requirejs가 포함된 <script> 태그를 찾을 수 없습니다.")
         
         return store_id
     

@@ -30,6 +30,7 @@ class PostGenerator: # gemini_api 활용
     
         
     def genai_model(self):
+        
         genai.configure(api_key=self.api_key)
 
         generation_config = {
@@ -38,27 +39,35 @@ class PostGenerator: # gemini_api 활용
         "top_k": 1,
         "max_output_tokens": 2048,
         }
-
         model = genai.GenerativeModel('gemini-1.5-flash',
-                                    generation_config=generation_config)
+                                        generation_config=generation_config)
         self.logger.info("모델 api 로드 완료") 
         return model
+
+        
     
     def generate_title(self):
-    
-        response = self.model.generate_content(f"""{self.restaurant_info} 이와같은 음식점 정보를 
-                                    바탕으로 블로그 포스팅을 할껀데 제목을 아래의 예제와 같이 지을꺼야
-                                    예제) [연남] 마포 브런치 맛집 '버우드' / 서이추환영 ,[안국역/북촌] 힐링되는 찻집 카페 '티테라피' / 서이추환영
-                                    - 첫번째로 들어가는 것은 []안에 지역을 넣어줘 역을 기준으로 넣어주는게 제일 좋고 아니라면 그 음식점이 있는 유명한 지명을 넣어줘도 돼
-                                    - 두번째 이 음식점의 대표메뉴나 대표표현을 이용해서 이 음식점의 특징을 넣어줘 예를 들어 힐링되는 찻집 카페 처럼 말이야
-                                    - 그리고 세번째는 ''안에 음식점 이름을 넣어줘
-                                    - 마지막으로는 / 서이추환영을 꼭 넣어주길 바라
-                                    - 다른 옵션이나 부가 설명은 답변안에 넣지말고 제목만 추출해서 쓸 수 있게 짧게 답변 줬으면 좋겠어
-                                    """)    
-        self.logger.info("블로그 제목 완성")               
+        try :
+            response = self.model.generate_content(f"""{self.restaurant_info} 이와같은 음식점 정보를 
+                                        바탕으로 블로그 포스팅을 할껀데 제목을 아래의 예제와 같이 지을꺼야
+                                        예제) [연남] 마포 브런치 맛집 '버우드' / 서이추환영 ,[안국역/북촌] 힐링되는 찻집 카페 '티테라피' / 서이추환영
+                                        - 첫번째로 들어가는 것은 []안에 지역을 넣어줘 역을 기준으로 넣어주는게 제일 좋고 아니라면 그 음식점이 있는 유명한 지명을 넣어줘도 돼
+                                        - 두번째 이 음식점의 대표메뉴나 대표표현을 이용해서 이 음식점의 특징을 넣어줘 예를 들어 힐링되는 찻집 카페 처럼 말이야
+                                        - 그리고 세번째는 ''안에 음식점 이름을 넣어줘
+                                        - 마지막으로는 / 서이추환영을 꼭 넣어주길 바라
+                                        - 다른 옵션이나 부가 설명은 답변안에 넣지말고 제목만 추출해서 쓸 수 있게 짧게 답변 줬으면 좋겠어
+                                        """)    
+            self.logger.info("블로그 제목 완성")
+        except Exception as e:
+            print(e)
+            self.logger.error(f"API 키 설정 오류")
+            raise ValueError(f"{e}")
+                           
         return response.text
     
     def generate_post(self):
+        if self.model == None:
+            raise ValueError("모델이 로드되지 않았습니다.")
         response = self.model.generate_content(f"""{self.restaurant_info} 이와 같은 음식점 정보를 바탕으로 블로그 포스팅을 할꺼야 아래는 내가 예전에 쓴 글이니
                                 이와 같이 써줘.
                                 
@@ -129,6 +138,8 @@ class PostGenerator: # gemini_api 활용
     
     
     def generate_schedule(self):
+        if self.model == None:
+            raise ValueError("모델이 로드되지 않았습니다.")
         response = self.model.generate_content(f"""{self.restaurant_info['schedule']}은 음식점의 영업시간 정보야 이를 블로그에 정보로 넣을 건데 다음과 같이 적어줘
                                     - 영업시간 이라는 단어로 시작해줘 이부분에만 '*'는 빼줘
                                     - 괄호는 쓰이지 않아

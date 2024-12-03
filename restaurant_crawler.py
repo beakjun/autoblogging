@@ -39,43 +39,46 @@ class RestaurantInfo:
     def crawling_restaurant(self):
         
         self.logger.info(f"{self.name} 크롤링 시작")
+        input_sch_txt=""
+        input_loc_txt=""
         input_reviews_txt = ""
         
-        try : 
-            display = Display(visible=0, size=(1920, 1080))
-            display.start()
-            agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
-            # selenium options
-            chrome_options = Options()
-            chrome_options.add_argument(f'--user-agent={agent}')
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            # selenium driver
-            driver = webdriver.Chrome(options=chrome_options)
-            
-            # getting naver store_id
-            store_id=self.extract_store_id()
-            
-            
-            # 크롤링 시작
-            url = f"https://m.place.naver.com/restaurant/{store_id}/home"
-            review_url = f"https://m.place.naver.com/restaurant/{store_id}/review/visitor"
-            time.sleep(2)
-            
-            driver.get(url)
-            
-            # 가게 위치 추출
-            loc_text = self.extract_location(driver)
-            input_loc_txt = f"가게 위치: {loc_text}"
-            self.logger.info("가게 위치 크롤링 완료")
-            
-            # 영업시간 추출
-            schedule_txt = self.extract_schedule(driver)
-            input_sch_txt = f"영업시간:\n{schedule_txt}"
-            self.logger.info("영업시간 크롤링 완료")
-            
-            # 리뷰 추출
+     
+        display = Display(visible=0, size=(1920, 1080))
+        display.start()
+        agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
+        # selenium options
+        chrome_options = Options()
+        chrome_options.add_argument(f'--user-agent={agent}')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        # selenium driver
+        driver = webdriver.Chrome(options=chrome_options)
+        
+        # getting naver store_id
+        store_id=self.extract_store_id()
+        print(store_id)
+        
+        # 크롤링 시작
+        url = f"https://m.place.naver.com/restaurant/{store_id}/home"
+        review_url = f"https://m.place.naver.com/restaurant/{store_id}/review/visitor"
+        time.sleep(2)
+        
+        driver.get(url)
+        
+        # 가게 위치 추출
+        loc_text = self.extract_location(driver)
+        input_loc_txt = f"가게 위치: {loc_text}"
+        self.logger.info("가게 위치 크롤링 완료")
+        
+        # 영업시간 추출
+        schedule_txt = self.extract_schedule(driver)
+        input_sch_txt = f"영업시간:\n{schedule_txt}"
+        self.logger.info("영업시간 크롤링 완료")
+        
+        try:
+        # 리뷰 추출
             time.sleep(3)
-            n= 10 # 몇 번이나 더보기 버튼을 누를 것인가
+            n= 5 # 몇 번이나 더보기 버튼을 누를 것인가
             driver.get(review_url)
             reviews = self.extract_reviews(driver,n)
             
@@ -108,7 +111,7 @@ class RestaurantInfo:
         headers = { 'User-Agent': agent }
 
         response = requests.get(url, headers=headers)
-
+        
         soup = BeautifulSoup(response.text, 'html.parser')
         
         script_tag = soup.find('script', string=lambda t: t is not None and 'requirejs' in t)
@@ -170,51 +173,42 @@ class RestaurantInfo:
         # review_tab.click()
         
         # # 페이지가 로드될 때까지 대기
-        print(driver.current_url)
+        self.logger.info(driver.current_url)
         self.logger.info("Review Tab 화면 정상 호출")
         
-        for i in range(n):
-            try : 
-                
+        try :
+            for i in range(n):
                 more_reviews_btn = WebDriverWait(driver, 20).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.fvwqf'))
+                        EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.fvwqf'))
                 )
-                try :
-                    actions = ActionChains(driver)
-                    actions.move_to_element(more_reviews_btn).perform()
-                    time.sleep(5)
-                    more_reviews_btn.click()
-                except  (TimeoutException, NoSuchElementException):
-                    self.logger.info(f'더보기 버튼을 찾을 수 없거나 로딩이 완료되었습니다.')
-                    break
                 if more_reviews_btn.is_displayed():
-                
-                    driver.execute_script("arguments[0].scrollIntoView(true);", more_reviews_btn)
-                    button_location = more_reviews_btn.location
-                    scroll_y = button_location['y'] - 100
-                    driver.execute_script(f"window.scrollTo(0, {scroll_y});")
+                    page_source = driver.page_source
+                    soup = BeautifulSoup(page_source, 'html.parser')
+                    elements = soup.find_all(class_ = 'pui__xtsQN-')
+            
+                    actions = ActionChains(driver)
+                    time.sleep(3)
+                    actions.move_to_element(more_reviews_btn).perform()
+            
                     time.sleep(3)
                     more_reviews_btn.click()
-                    time.sleep(3) 
-                    
-                    self.logger.info(f"{i} 번째 더보기 클릭 완료")
-                else:
-                    self.logger.info('더보기 버튼이 더이상 존재하지 않습니다.')
-                    break
-            except  (TimeoutException, NoSuchElementException):
-                self.logger.info(f'더보기 버튼을 찾을 수 없거나 로딩이 완료되었습니다.')
-                break
-        page_source = driver.page_source
-        soup = BeautifulSoup(page_source, 'html.parser')
+                    self.logger.info(f"{i+1} 번째 더보기 클릭 완료")
+                else : 
+                    self.logger.info(f"{i+1} 번째에서 더보기 버튼 찾을 수 없음")
+        finally :
+            time.sleep(3)
+            page_source = driver.page_source
+            soup = BeautifulSoup(page_source, 'html.parser')
+            
+            elements = soup.find_all(class_ = 'pui__xtsQN-')
+            text_list = [element.get_text().strip() for element in elements]
         
-        elements = soup.find_all(class_ = 'pui__xtsQN-')
-        text_list = [element.get_text().strip() for element in elements]
             
         return text_list
     
 
 def main():
-    restaurant=RestaurantInfo("버우드","연남")
+    restaurant=RestaurantInfo("텐노아지","등촌역")
     restaurant_info =restaurant.crawling_restaurant()
     print(restaurant_info)
 

@@ -1,6 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
-LOG_FILE = "/home/wjsqorwns93/bj/autoblogging/logs/restaurant_info.log"
+LOG_FILE = "./logs/restaurant_info.log"
 
 # 공통 핸들러
 handler = RotatingFileHandler(LOG_FILE, maxBytes=5 * 1024 * 124, backupCount=3)

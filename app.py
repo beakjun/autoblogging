@@ -43,12 +43,6 @@ def handle_submit():
             st.session_state.task_completed = False  # 작업 완료 초기화
             st.session_state.task_failed = False
     
-import random
-def test():
-    if random.random() < 0.5:  # 50% 확률
-        return True
-    else:
-        return False
 
 col1, col2 = st.columns([2,4])
 
@@ -75,39 +69,59 @@ with col1 :
         
         
         
-        submit_button = st.form_submit_button('**글 작성**',on_click=handle_submit ,disabled=st.session_state.disabled)
+        submit_button = st.form_submit_button('**글 작성**',on_click=handle_submit,disabled=st.session_state.disabled)
         
-if st.session_state.disabled == True & st.session_state.loading == True :
+if st.session_state.disabled == True and st.session_state.loading == True :
     with col2:
         with st.spinner('로딩중...'):
-            dd=test()
-            time.sleep(5)
-            if dd:
+            try :
+                restaurant=RestaurantInfo(user_input_r,user_input_l)
+                info=restaurant.crawling_restaurant()
+            except : 
+                st.session_state.error_message = f'{user_input_r} 크롤링 중 에러 발생'
+                st.session_state.disabled = False
+                st.session_state.loading = False
+                st.session_state.task_completed = False
+                st.session_state.task_failed = True
+                st.rerun()
+             
+            try :
+                postgen = PostGenerator(info,user_menues,user_input_d,api_key)
+                model = postgen.genai_model()
+                title = postgen.generate_title()
+                post = postgen.generate_post()
+                schedule = postgen.generate_schedule()
+            except ValueError as e:
+                if "API key not valid" in str(e):
+                    st.session_state.error_message = "API 오류: 유효하지 않은 API 키입니다. API 키를 확인하세요."
+                else:
+                    st.session_state.error_message = f"모델 사용 중 오류 발생: {str(e)}"  # 모델 사용 중 다른 오류 처리
+                st.session_state.disabled = False
+                st.session_state.loading = False
+                st.session_state.task_completed = False
+                st.session_state.task_failed = True
+                st.rerun()
+            finally : 
                 st.session_state.disabled = False
                 st.session_state.loading = False
                 st.session_state.task_completed = True
                 st.session_state.task_failed = False
+                st.session_state.blog_post = f"{post}\n\n{schedule}"
+                st.session_state.blog_title = title
                 st.rerun()
-            else :
-                st.session_state.disabled = False
-                st.session_state.loading = False
-                st.session_state.task_completed = False
-                st.session_state.task_failed =True
-                failed= True
-                st.rerun()
+                
             
             
 
 with col2:
-    if st.session_state.error_message :
-        st.error(st.session_state.error_message)
+    if st.session_state.error_message:
+        st.error(f"⚠️ {st.session_state.error_message}")
     elif st.session_state.task_completed:
-        st.success("작업이 완료 되었습니다.")
-        st.write('ㅎㅇ')
-    elif st.session_state.task_failed:
-        st.error("API 에러일듯")
-    else :
-        st.info("입력값을 작성해주세요")         
+        st.success("✅ 작업이 완료 되었습니다. 생성된 글을 확인하세요!")
+        st.text_input("블로그 타이틀", value=st.session_state.blog_title)
+        st.text_area("포스트", value=st.session_state.blog_post, height=500)
+    else:
+        st.info("📝 입력값을 작성해주세요.")
         
     
     

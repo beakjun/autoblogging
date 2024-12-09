@@ -80,8 +80,8 @@ class RestaurantInfo:
             n= 5 # 몇 번이나 더보기 버튼을 누를 것인가
             driver.get(review_url)
             reviews = self.extract_reviews(driver,n)
-            
-            input_reviews_txt = f"리뷰 :{", \n".join(reviews)}"
+            reviews_inte=", \n".join(reviews)
+            input_reviews_txt = f"리뷰 :{reviews_inte}"
         
             self.logger.info("리뷰 크롤링 완료")
         

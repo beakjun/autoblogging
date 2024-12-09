@@ -56,7 +56,6 @@ class RestaurantInfo:
         
         # getting naver store_id
         store_id=self.extract_store_id()
-        print(store_id)
         
         # 크롤링 시작
         url = f"https://m.place.naver.com/restaurant/{store_id}/home"

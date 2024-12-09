@@ -86,7 +86,7 @@ class RestaurantInfo:
             self.logger.info("리뷰 크롤링 완료")
         
         except Exception as e :
-            put_reviews_txt = f"리뷰 :{", \n".join(reviews)}"
+            
             self.logger.error(f"{self.name} 크롤링 중 오류 발생 :{e}")
         
         finally : 

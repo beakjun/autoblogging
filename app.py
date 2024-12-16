@@ -86,7 +86,7 @@ if st.session_state.disabled == True and st.session_state.loading == True :
                 st.rerun()
              
             try :
-                postgen = PostGenerator(info,user_menues,user_input_d,api_key)
+                postgen = PostGenerator(info,user_menues,user_input_l,user_input_d,api_key)
                 model = postgen.genai_model()
                 title = postgen.generate_title()
                 post = postgen.generate_post()

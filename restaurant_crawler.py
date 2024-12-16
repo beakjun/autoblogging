@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
-from pyvirtualdisplay import Display
+#from pyvirtualdisplay import Display
 from logger_config import get_logger
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
@@ -44,8 +44,8 @@ class RestaurantInfo:
         input_reviews_txt = ""
         
      
-        display = Display(visible=0, size=(1920, 1080))
-        display.start()
+        #display = Display(visible=0, size=(1920, 1080))
+        #display.start()
         agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
         # selenium options
         chrome_options = Options()
@@ -77,7 +77,7 @@ class RestaurantInfo:
         try:
         # 리뷰 추출
             time.sleep(3)
-            n= 5 # 몇 번이나 더보기 버튼을 누를 것인가
+            n= 5  # 몇 번이나 더보기 버튼을 누를 것인가
             driver.get(review_url)
             reviews = self.extract_reviews(driver,n)
             reviews_inte=", \n".join(reviews)
@@ -91,7 +91,7 @@ class RestaurantInfo:
         
         finally : 
             driver.quit()
-            display.stop()
+            #display.stop()
             self.logger.info(f"{self.name} 크롤링 종료")
             
             restaurant_info = {
@@ -181,9 +181,6 @@ class RestaurantInfo:
                         EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.fvwqf'))
                 )
                 if more_reviews_btn.is_displayed():
-                    page_source = driver.page_source
-                    soup = BeautifulSoup(page_source, 'html.parser')
-                    elements = soup.find_all(class_ = 'pui__xtsQN-')
             
                     actions = ActionChains(driver)
                     time.sleep(3)
@@ -199,9 +196,10 @@ class RestaurantInfo:
             page_source = driver.page_source
             soup = BeautifulSoup(page_source, 'html.parser')
             
-            elements = soup.find_all(class_ = 'pui__xtsQN-')
+            elements = soup.find_all(class_ = 'pui__X35jYm')
+            
             text_list = [element.get_text().strip() for element in elements]
-        
+            
             
         return text_list
     

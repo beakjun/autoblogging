@@ -5,15 +5,20 @@ from IPython.display import Markdown
 from logger_config import get_logger
  
 class PostGenerator: # gemini_api 활용
-    def __init__(self,restaurant_info:dict, menu:list, visit_date: str,api_key:str):
+    def __init__(self,restaurant_info:dict, input_l:str ,menu:list, visit_date: str,api_key:str):
         self.logger = get_logger(self.__class__.__name__)
         self.restaurant_info = restaurant_info
         self.restaurant_info.update({
+            "input_location" : input_l,
             "menu": menu,
             "visit_date": visit_date
         })
         self.api_key = api_key
         self.model = self.genai_model()
+        self.review_clean = self.info_summary()
+        self.restaurant_info.update({
+            'reviews' : self.review_clean
+        })
         
         
     
@@ -39,12 +44,22 @@ class PostGenerator: # gemini_api 활용
         "top_k": 1,
         "max_output_tokens": 2048,
         }
-        model = genai.GenerativeModel('gemini-1.5-flash',
-                                        generation_config=generation_config)
+        # model = genai.GenerativeModel('gemini-1.5-flash',
+        #                                 generation_config=generation_config)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp',
+                                         generation_config=generation_config)
         self.logger.info("모델 api 로드 완료") 
         return model
 
-        
+    def info_summary(self):
+        reviews=self.restaurant_info['reviews']
+        menu = self.restaurant_info['menu']
+        response = self.model.generate_content(f"""{reviews} 다음과 같은 리뷰를 내가 수집해둔 결과가 있어 
+                                               이 음식점에 대한 분위기, 평가, 메뉴구성, 접근성, 가격 등등의 사람들의 평가를 정리해주고
+                                               특히 내가 이 음식점에서 먹은 {menu}에 대한 평가를 찾아서 정리해봐
+                                               """)
+        return response.text
+    
     
     def generate_title(self):
         try :
@@ -121,6 +136,8 @@ class PostGenerator: # gemini_api 활용
                                 - 여자친구와 함께 간 음식점에 대한 블로그글이어서 이 점 꼭 참고해서 작성해줘
                                 - 내가 쓴글의 말투와 문장의 수와 비슷하게 참고해서 작성해줬으면 좋겠어
                                 - 니가 거리에 대한 정보는 알아서 몇 분정도 걸어가면 있다던지로 대체해줘
+                                - 20~30대 여자의 블로그를 참고해서 어떻게 음식점에 가게 됬는지 잘 생각해서 써줘
+                                - 방문날짜도 생각해서 글을 작성해줘
                                 - 중간중간 글 아래 해당하는 글에 대한 '[사진]' 한개를 넣어줘
                                 - 내가 준 정보의 menu가 내가 시킨 음식이니깐 이것에 대해서만 글을 써야해
                                 - 글의 첫 부분에는 어떻게 가게 됐는지 설명이 들어가야해 젊은 커플이 왜 그 음식점을 갔는지 잘 지어내서 써줘
@@ -130,7 +147,7 @@ class PostGenerator: # gemini_api 활용
                                 - 사진은 가게내부사진, 메뉴판사진, 시킨 메뉴의 전체사진, 각 메뉴의 사진만으로 구성해줘
                                 - 가게에서 다루는 메뉴에 대해서 소개할 때 내가 준 리뷰 정보에 나와있는 음식이거나 내가 시킨 음식들 정도만 언급하고 다양한 음식들이 있다 이정도 수준만 언급해봐
                                 - 각 메뉴리뷰는 한개씩 사진과 함께 글을 작성해줘 또한 메뉴에 대해서 설명할 때 리뷰정보에 있는 재료들만 사실적으로 언급해줘
-                                - 리뷰에서 봤다 이런 표현은 자제해줘
+                                - "리뷰에서 봤다","그런 의견이 있었다" 이런 표현은 자제해줘 내가 느낀점을 쓰는 것 처럼 해야돼
                                 - 글의 마지막에는 이번 포스팅은 여기서 마치겠습니다!!! 먹바! 가 들어가야돼
                                 """)
         self.logger.info("블로그 포스트 글 완성")  
@@ -160,20 +177,23 @@ def main():
     
     # 테스트용 데이터
     import json    
-    file_path = '/home/wjsqorwns93/bj/autoblogging/restaurant_data.json'
+    file_path = './restaurant_info.json'
     with open(file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
     
     GOOGLE_API_KEY = 'AIzaSyBiKq7ZZp_Rndr7IA6K0_2ZeGrwJeWUqxI'
-    postgenerator = PostGenerator(data,['아지텐동','에비텐카레'],'2024-08-02',GOOGLE_API_KEY)
+    postgenerator = PostGenerator(data,['아지텐동','에비텐카레'],'등촌','2024-08-02',GOOGLE_API_KEY)
 
     #aa=postgenerator.generate_schedule()
     
-    bb=postgenerator.generate_schedule()
+    bb=postgenerator.generate_title()
     
-    #bb=postgenerator.generate_post()
+    
+    cc=postgenerator.generate_post()
     #cc=postgenerator.generate_title()
+    
     print(bb)
+    print(cc)
 
 if __name__ == "__main__":
     main()
